@@ -1,6 +1,11 @@
 use image::GenericImageView;
 use std::io::{self, Write};
 
+fn calculate_saturation(red: u8, green: u8, blue: u8) -> f32 { 
+
+    0.0
+}
+
 fn merge_sort(input: &Vec<(u32, u32, u32, image::Rgba<u8>)>) -> Vec<(u32, u32, u32, image::Rgba<u8>)> {
     // base case
     if input.len() < 2 {
@@ -200,6 +205,10 @@ fn generate_palette(path: &str, colors: u8){
     buffer.save("palette_sorted.png").unwrap();
 }
 
+fn calculate_luminosity(red: u8, green: u8, blue: u8) -> f32 {
+    (red as f32 * 0.2126) + (green as f32 * 0.715) + (blue as f32 * 0.0722)
+}
+
 fn generate_palette_luminosity(path: &str, colors: u8){
     let img = image::open(path).unwrap();
     let (imgx, imgy) = img.dimensions();
@@ -207,7 +216,7 @@ fn generate_palette_luminosity(path: &str, colors: u8){
     let mut buffer = image::ImageBuffer::new(imgx, imgy);
     //looping through and creating a 1-dimensional array of each pixel and it's deviance
     for (x, y, pixel) in img.pixels() {
-        let luminosity: f32 = (pixel[0] as f32 * 0.2126) + (pixel[1] as f32 * 0.715) + (pixel[2] as f32 * 0.0722); 
+        let luminosity: f32 = calculate_luminosity(pixel[0], pixel[1], pixel[2]); 
         pixels.push((luminosity, x, y, pixel));
     }
     // merge sorts the vector based on their deviance from the selected color
@@ -318,11 +327,101 @@ fn generate_palette_hue(path: &str, colors: u8){
 
 }
 
+fn generate_palette_combo(path: &str, hues: u8, luminosities: u8){
+    let img = image::open(path).unwrap();
+    let (imgx, imgy) = img.dimensions();
+    let mut buffer = image::ImageBuffer::new(imgx, imgy);
+    let number_of_pixels: u128 = imgx as u128 * imgy as u128;
+    // calculate the min hue and the max hue
+    let mut min_hue: f32 = 360.0;
+    let mut max_hue: f32 = 0.0;
+    let mut min_lum: f32 = 360.0;
+    let mut max_lum: f32 = 0.0;
+    for (_x, _y, pixel) in img.pixels() {
+        let hue = calculate_hue(pixel[0], pixel[1], pixel[2]);
+        let lum = calculate_luminosity(pixel[0], pixel[1], pixel[2]);
+        if hue < min_hue {
+            min_hue = hue;
+        }
+        if hue > max_hue {
+            max_hue = hue;
+        }
+        if lum < min_lum {
+            min_lum = lum;
+        }
+        if lum > max_lum {
+            max_lum = lum;
+        }
+    }
+
+    let delta_hue = max_hue - min_hue;
+    let delta_lum = max_lum - min_lum;
+    let mut actual_colors = 0;
+    let mut color_list = Vec::new();
+    // loop through each hue
+    for i in 1..=hues{
+        // loop through each luminosity
+        for j in 1..=luminosities{
+            let mut red_total: u128 = 0;
+            let mut green_total: u128 = 0;
+            let mut blue_total: u128 = 0;
+            let mut count: u128 = 0;
+            let hue_mod: f32 = i as f32;
+            let lum_mod: f32 = j as f32;
+            for (_x, _y, pixel) in img.pixels() {
+                let hue = calculate_hue(pixel[0], pixel[1], pixel[2]);
+                let lum = calculate_luminosity(pixel[0], pixel[1], pixel[2]);
+                // first conditional checks hue, second checks luminsotiy
+                if (hue >= delta_hue * ((hues as f32 - hue_mod) / hues as f32) && hue <= delta_hue * ((hues as f32 - hue_mod + 1.0) / hues as f32)) && (lum >= delta_lum * ((luminosities as f32 - lum_mod) / lum as f32) && lum <= delta_lum * ((luminosities as f32 - lum_mod + 1.0) / luminosities as f32)){
+                    red_total += pixel[0] as u128;
+                    green_total += pixel[1] as u128;
+                    blue_total += pixel[2] as u128;
+                    count += 1;
+                }
+            }
+            let average: [u8; 3] = [(red_total / count) as u8, (green_total / count) as u8, (blue_total / count) as u8];
+            for y in 0..imgy{ 
+                for x in 0..imgx {
+                    buffer.put_pixel(x, y, image::Rgb(average));
+                }
+            }
+            color_list.push(average);
+            actual_colors += 1;
+        }
+    }
+    
+    let mut i = 0;
+    let mut index = 0;
+    let size = number_of_pixels / actual_colors as u128;
+    for d in 0..(imgy + imgx - 1) {
+        for y in (0..=d).rev() {
+            let x = d - y;
+            if y < imgy && x < imgx {
+                if i == size + 1 {
+                    index += 1;
+                    i = 0;
+                }
+                buffer.put_pixel(x, y, image::Rgb(color_list[index]));
+                i += 1; 
+            }
+        }
+    }
+
+    buffer.save("hue_sorted.png").unwrap();
+}
+
+/*
+
+TODO:
+
+Fix the combo algorithm so they stop being O(w * l * h * b) (Create a vector that stores the needed categories instead of iterating through and checking only for one category) [ ]
+
+Remove the parts of code that still have to do with sorting, as they aren't needed for this algo [ ]
+*/
+
 fn main() {
-    let path = String::from("C:/Users/Royal/Downloads/wallpapers.png");
-    println!("Sorting By Hue");
-    generate_palette_hue(&path,32);
-    println!("Sorting By Luminosity");
-    generate_palette_luminosity(&path,32);
+    let path = String::from("/Users/randallcandlewax/Sowilo/moon.webp");
+    println!("Generating By Combo");
+    generate_palette_combo(&path,32, 2);
     println!("Done");
 }
