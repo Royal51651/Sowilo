@@ -1,5 +1,14 @@
 use image::GenericImageView;
+use core::num;
 use std::io::{self, Write};
+
+type Buf = image::ImageBuffer<image::Rgba<u8>, Vec<u8>>;
+type Color = image::Rgba<u8>;
+
+const WHITE: Color = image::Rgba([255, 255, 255, 255]);
+const BLACK: Color = image::Rgba([0, 0, 0, 255]);
+const BLANK: Color = image::Rgba([0, 0, 0, 0]);
+const SOWILO: Color = image::Rgba([5, 154, 173, 255]);
 
 fn calculate_saturation(red: u8, green: u8, blue: u8) -> f32 { 
     let normal_red = red as f32 / 255.0;
@@ -210,10 +219,9 @@ fn generate_palette_hue(path: &str, colors: u8){
 
 }
 
-fn generate_palette_combo(path: &str, hues: u8, luminosities: u8){
+fn generate_palette_combo(path: &str, hues: u32, luminosities: u32) -> Vec<Vec<image::Rgba<u8>>> {
     let img = image::open(path).unwrap();
     let (imgx, imgy) = img.dimensions();
-    let mut buffer = image::ImageBuffer::new(imgx, imgy);
     let number_of_pixels: u128 = imgx as u128 * imgy as u128;
     // calculate the min hue and the max hue
     let mut min_hue: f32 = 360.0;
@@ -250,7 +258,7 @@ fn generate_palette_combo(path: &str, hues: u8, luminosities: u8){
         
     }
 
-    let mut color_list: Vec<image::Rgba<u8>> = Vec::new();
+    let mut color_list: Vec<Vec<image::Rgba<u8>>> = Vec::new();
     let mut actual_colors: u128 = 0;
     for i in hue_slices {
         let mut min_lum: f32 = 360.0;
@@ -268,6 +276,7 @@ fn generate_palette_combo(path: &str, hues: u8, luminosities: u8){
         let delta_lum = max_lum - min_lum;
         let lum_slice_size = delta_lum / luminosities as f32;
         // loop through the pixels
+        let mut sub_list: Vec<image::Rgba<u8>> = Vec::new();
         for j in 0..luminosities {
             let mut red_total: u128 = 0;
             let mut green_total: u128 = 0;
@@ -286,31 +295,149 @@ fn generate_palette_combo(path: &str, hues: u8, luminosities: u8){
                 }
             }
             if count != 0 {
-                color_list.push(image::Rgba([(red_total / count) as u8, (green_total / count) as u8, (blue_total / count) as u8, 255]));
-                actual_colors += 1;
+                sub_list.push(image::Rgba([(red_total / count) as u8, (green_total / count) as u8, (blue_total / count) as u8, 255]));        
+            } else {
+                sub_list.push(BLACK);
             }
+            actual_colors += 1;
         }
+        color_list.push(sub_list);
     }
-
-    let mut i = 0;
-    let mut index = 0;
-    let size = number_of_pixels / actual_colors;
-    for d in 0..(imgy + imgx - 1) {
-        for y in (0..=d).rev() {
-            let x = d - y;
-            if y < imgy && x < imgx {
-                if i == size + 1 {
-                    index += 1;
-                    i = 0;
-                }
-                buffer.put_pixel(x, y, color_list[index]);
-                i += 1; 
-            }
-        }
-    }
-    buffer.save("hue_sorted.png").unwrap();
+    color_list
 }
 
+fn draw_pixel(x: u32, y: u32, color: [u8; 4], input: &mut Buf){
+    let pixel = input.get_pixel_mut(x, y);
+    *pixel = image::Rgba(color);
+
+}
+
+fn draw_line_horizontal(mut x0: i32, mut y0: i32, mut x1: i32, mut y1: i32, color: [u8; 4], input: &mut Buf){
+    if x0 > x1{
+        x0 ^= x1;
+        x1 ^= x0;
+        x0 ^= x1;
+        y0 ^= y1;
+        y1 ^= y0;
+        y0 ^= y1;
+    }
+    let mut dx = x1 - x0;
+    let mut dy = y1 - y0;
+
+    let dir;
+    if(dy < 0){
+        dir = -1;
+    } else {
+        dir = 1;
+    }
+    dy *= dir;
+
+    if dx != 0{
+        let mut y = y0;
+        let mut p = 2 * dy - dx;
+        for i in 0..(dx + 1){
+            draw_pixel(x0 as u32 + i as u32, y as u32, color, input);
+            if p >= 0{
+                y += dir;
+                p = p - 2*dx;
+            }
+            p = p + 2*dy;
+        }
+    }
+}
+
+fn draw_line_vertical(mut x0: i32, mut y0: i32, mut x1: i32, mut y1: i32, color: [u8; 4], input: &mut Buf){
+    if y0 > y1{
+        x0 ^= x1;
+        x1 ^= x0;
+        x0 ^= x1;
+        y0 ^= y1;
+        y1 ^= y0;
+        y0 ^= y1;
+    }
+    let mut dx = x1 - x0;
+    let mut dy = y1 - y0;
+
+    let dir;
+    if(dx < 0){
+        dir = -1;
+    } else {
+        dir = 1;
+    }
+    dx *= dir;
+
+    if dy != 0{
+        let mut x = x0;
+        let mut p = 2 * dx - dy;
+        for i in 0..(dy + 1){
+            draw_pixel(x as u32, y0 as u32 + i as u32, color, input);
+            if p >= 0{
+                x += dir;
+                p = p - 2*dy;
+            }
+            p = p + 2*dx;
+        }
+    }
+}
+
+fn draw_line(x0: u32, y0: u32, x1: u32, y1: u32, color: [u8; 4], input: &mut Buf){
+    let dx: i32 = x1 as i32 - x0 as i32;
+    let dy: i32 = y1 as i32 - y0 as i32;
+    if(dx * dx > dy * dy){
+        draw_line_horizontal(x0 as i32, y0 as i32, x1 as i32, y1 as i32, color, input);
+    } else {
+        draw_line_vertical(x0 as i32, y0 as i32, x1 as i32, y1 as i32, color, input);
+    }
+}
+
+fn draw_rectangle(start_x: u32, start_y: u32, width: u32, height: u32, color: image::Rgba<u8>, input: &mut Buf) {
+    for y in 0..height {
+        for x in 0..width {
+            let pixel = input.get_pixel_mut(start_x + x, start_y + y);
+            *pixel = color;
+        }
+    }
+}
+
+fn distance(x1: u32, y1: u32, x2: u32, y2: u32) -> f32{
+    let dx = x1 as i32 - x2 as i32;
+    let dy = y1 as i32 - y2 as i32;
+    (((dx * dx) + (dy * dy)) as f32).sqrt()
+}
+
+fn draw_circle(start_x: u32, start_y: u32, radius: u32, color: [u8; 4], input: &mut Buf){
+    for y in (start_y - radius)..=(start_y + radius){
+        for x in (start_x - radius)..=(start_y + radius){
+            if distance(start_x, start_y, x, y) < radius as f32 {
+                draw_pixel(x, y, color, input);
+            }
+        }
+    }
+}
+
+// allow 128 pixels of padding
+fn format_output(input: Vec<Vec<image::Rgba<u8>>>, override_spacing: bool){
+
+    let mut spacing: u32 = 1920 / (input.len() as u32 * input.len() as u32);
+    if spacing > 64 && !override_spacing {
+        spacing = 64;
+    } else if spacing < 4 || override_spacing {
+        spacing = 0;
+    }
+    
+    let square_height: u32 = (1920 - (spacing * (input.len() as u32 - 1))) / input.len() as u32;
+    let mut output: Buf = image::ImageBuffer::new(2048, 2048);
+    // black background
+    draw_rectangle(0, 0, 2048, 2048, BLACK, &mut output);
+    // sample image data
+    for y in 0..input.len() as u32 {
+        let square_width = (1920) / (input[y as usize]).len() as u32;
+        for x in 0..input[y as usize].len() as u32 {
+            draw_rectangle(64 + (square_width * x), 64 + (square_height * y) + (spacing * y), square_width, square_height, input[y as usize][x as usize], &mut output);
+        }
+    }
+    output.save("hue_sorted.png").unwrap();
+}
 /*
 
 TODO:
@@ -320,9 +447,11 @@ add a function to calculate using saturation in addition to hue and luminosity
 */
 
 fn main() {
-    let path = String::from("wallpapers.png");
+    let size: u32 = 8;
+    let path = String::from("image.jpg");
     println!("Generating By Combo");
-    //generate_palette_combo(&path,8, 2);
-    println!("{}", calculate_saturation(0, 1, 1));
+    let colors = generate_palette_combo(&path,size, size);
+    //println!("{}", calculate_saturation(0, 1, 1));
+    format_output(colors, true);
     println!("Done");
 }
