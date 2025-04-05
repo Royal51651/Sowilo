@@ -1,6 +1,5 @@
 use image::GenericImageView;
 use core::num;
-use std::io::{self, Write};
 
 type Buf = image::ImageBuffer<image::Rgba<u8>, Vec<u8>>;
 type Color = image::Rgba<u8>;
@@ -9,6 +8,67 @@ const WHITE: Color = image::Rgba([255, 255, 255, 255]);
 const BLACK: Color = image::Rgba([0, 0, 0, 255]);
 const BLANK: Color = image::Rgba([0, 0, 0, 0]);
 const SOWILO: Color = image::Rgba([5, 154, 173, 255]);
+
+
+fn merge_sort(input: &Vec<Color>) -> Vec<Color> {
+    // base case
+    if input.len() < 2 {
+        return input.to_vec();  // Ensure that we return the vector here
+    } else {
+        // splits the vector into two equal-ish halves
+        let size = input.len() / 2;
+        let left = merge_sort(&input[0..size].to_vec());
+        let right = merge_sort(&input[size..].to_vec());
+
+        // sorts and merges the two halves, then returns
+        let merged: Vec<Color> = merge(&left, &right);
+        merged
+    }
+}
+
+fn calculate_vibrancy(red: u8, green: u8, blue: u8) -> f32{
+    let lum = calculate_colorfulness(red, green, blue);
+    let sat = calculate_colorfulness(red, green, blue);
+    if(sat <= 128.0 || lum <= 64.0){
+        lum
+    } else {
+        lum * sat
+    }
+}
+
+fn calculate_colorfulness(red: u8, green: u8, blue: u8) -> f32 {
+   2.0 * calculate_saturation(red, green, blue) * calculate_luminosity(red, green, blue)
+}
+
+fn merge(left: &Vec<Color>, right: &Vec<Color>) -> Vec<Color> {
+    let mut i = 0;
+    let mut j = 0;
+    let mut output: Vec<Color> = Vec::new();
+
+    // performing the actual sort, and appending values to the buffer
+    while i < left.len() && j < right.len(){
+        let left_value: f32 = calculate_vibrancy(left[i][0], left[i][1], left[i][2]);
+        let right_value: f32 = calculate_vibrancy(right[j][0], right[j][1], right[j][2]);
+        if left_value < right_value {
+            output.push(left[i]);
+            i += 1;
+        } else {
+            output.push(right[j]);
+            j += 1;
+        }
+    }
+    // typical merge sort stuff
+    while i < left.len() {
+        output.push(left[i]);
+        i += 1;
+    }
+    while j < right.len() {
+        output.push(right[j]);
+        j += 1;
+    }
+
+    output
+}
 
 fn calculate_saturation(red: u8, green: u8, blue: u8) -> f32 { 
     let normal_red = red as f32 / 255.0;
@@ -101,6 +161,16 @@ fn calculate_hue(red: u8, green: u8, blue: u8) -> f32 {
 
 fn calculate_luminosity(red: u8, green: u8, blue: u8) -> f32 {
     (red as f32 * 0.2126) + (green as f32 * 0.715) + (blue as f32 * 0.0722)
+}
+
+fn calculate_value(red: u8, green: u8, blue: u8) -> f32 {
+    if(red > green && red > blue){
+        red as f32 / 255.0
+    } else if (green > red && green > blue){
+        green as f32 / 255.0
+    } else {
+        blue as f32 / 255.0
+    }
 }
 
 fn generate_palette_luminosity(path: &str, colors: u8){
@@ -332,6 +402,7 @@ fn generate_palette_hue_and_sat(path: &str, hues: u32, saturations: u32) -> Vec<
     }
 
     // sort each pixel by it's hue
+    println!("Sorting Hues");
     for (_x, _y, pixel) in img.pixels() {
         let hue = calculate_hue(pixel[0], pixel[1], pixel[2]);
         let index: usize = (hue / hue_slice_size) as usize;
@@ -342,9 +413,8 @@ fn generate_palette_hue_and_sat(path: &str, hues: u32, saturations: u32) -> Vec<
         }
         
     }
-
+    println!("Sorting Saturations");
     let mut color_list: Vec<Vec<image::Rgba<u8>>> = Vec::new();
-    let mut actual_colors: u128 = 0;
     for i in hue_slices {
         let mut min_sat: f32 = 360.0;
         let mut max_sat: f32 = 0.0;
@@ -358,36 +428,42 @@ fn generate_palette_hue_and_sat(path: &str, hues: u32, saturations: u32) -> Vec<
                 min_sat = sat;
             }
         }
-        let delta_sat = max_sat - min_sat;
-        let sat_slice_size = delta_sat / saturations as f32;
+        let delta_sat = max_sat as f64 - min_sat as f64;
+        let sat_slice_size = delta_sat / saturations as f64;
+        
+        let mut saturation_slices: Vec<[u128; 4]> = Vec::new();
+
+        for _i in 0..saturations {
+            saturation_slices.push([0, 0, 0, 0]);
+        }
+
+        for pixel in &i {
+            let sat = calculate_saturation(pixel[0], pixel[1], pixel[2]) as f64;
+            let mut index: usize = (((sat as f64 - min_sat as f64) / sat_slice_size as f64) as usize);
+            if(sat == max_sat as f64){
+                index = saturations as usize- 1;
+            }
+            saturation_slices[index][0] += pixel[0] as u128;
+            saturation_slices[index][1] += pixel[1] as u128;
+            saturation_slices[index][2] += pixel[2] as u128;
+            saturation_slices[index][3] += 1;
+        }
+
         // loop through the pixels
         let mut sub_list: Vec<image::Rgba<u8>> = Vec::new();
-        for j in 0..saturations {
-            let mut red_total: u128 = 0;
-            let mut green_total: u128 = 0;
-            let mut blue_total: u128 = 0;
-            let mut count: u128 = 0;
-            
-            // if they fit in a valid luminosity range, add them to the total;
-            for pixel in &i {
-                let sat = calculate_saturation(pixel[0], pixel[1], pixel[2]);
-                
-                if sat >= sat_slice_size * (j as f32) && sat <= sat_slice_size * (j as f32 + 1.0) {
-                    red_total += pixel[0] as u128;
-                    green_total += pixel[1] as u128;
-                    blue_total += pixel[2] as u128;
-                    count += 1;
-                }
-            }
-            if count != 0 {
-                sub_list.push(image::Rgba([(red_total / count) as u8, (green_total / count) as u8, (blue_total / count) as u8, 255]));        
+        for i in saturation_slices {
+            let count = i[3];
+            if i[3] != 0 {
+                sub_list.push(image::Rgba([(i[0] / count) as u8, (i[1] / count) as u8, (i[2] / count) as u8, 255]));        
             } else {
                 sub_list.push(BLACK);
             }
-            actual_colors += 1;
         }
         color_list.push(sub_list);
     }
+
+    
+
     color_list
 }
 
@@ -501,24 +577,23 @@ fn draw_circle(start_x: u32, start_y: u32, radius: u32, color: [u8; 4], input: &
 }
 
 // allow 128 pixels of padding
-fn format_output(input: Vec<Vec<image::Rgba<u8>>>, override_spacing: bool){
-
-    let mut spacing: u32 = 1920 / (input.len() as u32 * input.len() as u32);
+fn format_output(input: Vec<Vec<image::Rgba<u8>>>, override_spacing: bool, size: u32, outer_padding: u32){
+    let mut spacing: u32 = (size - (outer_padding * 2)) / (input.len() as u32 * input.len() as u32);
     if spacing > 64 && !override_spacing {
         spacing = 64;
     } else if spacing < 4 || override_spacing {
         spacing = 0;
     }
     
-    let square_height: u32 = (1920 - (spacing * (input.len() as u32 - 1))) / input.len() as u32;
-    let mut output: Buf = image::ImageBuffer::new(2048, 2048);
+    let square_height: u32 = ((size - (outer_padding * 2)) - (spacing * (input.len() as u32 - 1))) / input.len() as u32;
+    let square_width = (size - (outer_padding * 2)) / (input[0]).len() as u32;
+    let mut output: Buf = image::ImageBuffer::new(size, size);
     // black background
-    draw_rectangle(0, 0, 2048, 2048, BLACK, &mut output);
+    draw_rectangle(0, 0, size, size, BLACK, &mut output);
     // sample image data
-    for y in 0..input.len() as u32 {
-        let square_width = (1920) / (input[y as usize]).len() as u32;
+    for y in 0..input.len() as u32 {        
         for x in 0..input[y as usize].len() as u32 {
-            draw_rectangle(64 + (square_width * x), 64 + (square_height * y) + (spacing * y), square_width, square_height, input[y as usize][x as usize], &mut output);
+            draw_rectangle(outer_padding + (square_width * x), outer_padding + (square_height * y) + (spacing * y), square_width, square_height, input[y as usize][input.len() - 1 - x as usize], &mut output);
         }
     }
     output.save("hue_sorted.png").unwrap();
@@ -535,8 +610,12 @@ fn main() {
     let size: u32 = 8;
     let path = String::from("starry_night.jpg");
     println!("Generating By Combo");
-    let colors = generate_palette_hue_and_sat(&path,size, size);
+    let mut colors = generate_palette_hue_and_sat(&path,size, size);
+    let mut new_list: Vec<Vec<Color>> = Vec::new();
+    for sub_list in &colors{
+        new_list.push(merge_sort(sub_list));
+    }
     //println!("{}", calculate_saturation(0, 1, 1));
-    format_output(colors, true);
+    format_output(new_list, true, 1024,0);
     println!("Done");
 }
