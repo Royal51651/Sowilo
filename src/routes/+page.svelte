@@ -5,10 +5,9 @@
     let imageUrl = $state("");
     let image = $state("");
     let input_image = "";
-    let quality = $state(1);
-    let new_quality = $derived(1 * Math.pow(2, quality - 1));
+    let quality = $state(8);
     let image_size = 1024;
-    let sorting_type = $state("Luminosity");
+    let sorting_type = $state("Vibrancy");
 
     /**
      * @param {{ preventDefault: () => void; }} event
@@ -20,7 +19,7 @@
             event.preventDefault();
             image = await invoke("process", {
                 input: input_image,
-                size: new_quality,
+                size: quality,
                 sortType: sorting_type,
                 outputSize: image_size,
             });
@@ -39,6 +38,10 @@
 
     const changeSortMode = (/** @type {string} */ input) => {
         sorting_type = input;
+    }
+
+    const changeQuality = (/** @type {number} */ input) => {
+        quality = input;
     }
 
     const handleFileChange = (
@@ -65,16 +68,32 @@
 
 <main class="container">
     <div class="controlBar">
-        <button class="submitButton controlItem" onclick={submit}>Process at {new_quality} x {new_quality}</button>
-        <input class="selectSlider controlItem" type="range" bind:value={quality} min="1" max="9"/>
+        <button class="submitButton controlItem" onclick={submit}>Process</button>
+        
+        <div class="dropdown controlItem">
+            <button class="hoverButton controlItem">{quality} x {quality}</button>
+            <div class="content">
+                <button onclick={() => changeQuality(1)} class="dropButton controlItem">1</button>
+                <button onclick={() => changeQuality(2)} class="dropButton controlItem">2</button>
+                <button onclick={() => changeQuality(4)} class="dropButton controlItem">4</button>
+                <button onclick={() => changeQuality(8)} class="dropButton controlItem">8</button>
+                <button onclick={() => changeQuality(16)} class="dropButton controlItem">16</button>
+                <button onclick={() => changeQuality(32)} class="dropButton controlItem">32</button>
+                <button onclick={() => changeQuality(64)} class="dropButton controlItem">64</button>
+                <button onclick={() => changeQuality(128)} class="dropButton controlItem">128</button>
+                <button onclick={() => changeQuality(256)} class="dropButton controlItem">256</button>
+            </div>
+        </div>
+        
         <input class="fileInput controlItem" type="file" onchange={handleFileChange} accept="image/*" />
+        
         <div class="dropdown controlItem">
             <button class="hoverButton controlItem">{sorting_type}</button>
             <div class="content">
+                <button onclick={() => changeSortMode("Vibrancy")} class="dropButton controlItem">Vibrancy</button>
                 <button onclick={() => changeSortMode("Luminosity")} class="dropButton controlItem">Luminosity</button>
                 <button onclick={() => changeSortMode("Colorfulness")} class="dropButton controlItem">Colorfulness</button>
                 <button onclick={() => changeSortMode("Value")} class="dropButton controlItem">Value</button>
-                <button onclick={() => changeSortMode("Vibrancy")} class="dropButton controlItem">Vibrancy</button>
                 <button onclick={() => changeSortMode("Red Content")} class="dropButton controlItem">Red Content</button>
                 <button onclick={() => changeSortMode("Green Content")} class="dropButton controlItem">Green Content</button>
                 <button onclick={() => changeSortMode("Blue Content")} class="dropButton controlItem">Blue Content</button>
@@ -95,8 +114,9 @@
     line-height: 24px;
     font-weight: 400;
     --button-color: rgb(0, 95, 86);
-    --dark-button-color: rgb(0, 37, 34);
+    --dark-button-color: rgb(0, 70, 64);
     --main-color: rgb(35, 31, 32);
+    --dark-main-color: rgb(0, 37, 34);
     --text-color: rgb(255, 255, 255);
     font-synthesis: none;
     text-rendering: optimizeLegibility;
@@ -127,6 +147,9 @@ button {
 
 .dropdown {
     display: inline-block;
+    justify-content: center;
+    align-items: center;
+    position: relative;
 }
 
 .dropdown .hoverButton {
@@ -137,22 +160,23 @@ button {
 }
 
 .content {
-    display: block;
-    text-decoration: none;
-    position: absolute;
     display: none;
-    background-color: var(--main-color);
-    padding: 2%;
+    position: absolute;
+    background-color: var(--dark-main-color);
+    padding: 5%;
     border: 2px solid transparent;
-    border-bottom-left-radius: 8px;
+    border-radius: 8px;
+    min-width: 100%;
+    box-sizing: border-box;
 }
 
 .content .dropButton {
-    min-width: 100%;
+    width: 100%;
     box-shadow: 2px 2px 5px #000000ab;
     color: var(--text-color);
     background-color: var(--button-color);
     margin-top: 2%;
+    box-sizing: border-box;
 }
 
 .dropButton:hover {
@@ -198,6 +222,7 @@ button {
     flex-direction: column;
     justify-content: center;
     text-align: center;
+
 }
 
 
@@ -209,6 +234,7 @@ button {
 
 .controlBar {
     display: flex;
+    margin: 0;
     justify-content: space-between;
     width: 100%;
 }
@@ -239,8 +265,6 @@ button:hover {
 
 button:active {
     border-color: rgb(0, 211, 190);
-    border-width: 3px;
-
 }
 
 input,
