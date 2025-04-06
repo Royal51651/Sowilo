@@ -7,6 +7,7 @@
     let input_image = "";
     let quality = $state(8);
     let image_size = 1024;
+    let message = $state("Process");
     let sorting_type = $state("Vibrancy");
 
     /**
@@ -14,15 +15,17 @@
      */
 
     async function submit(event){
-        if(file != null){
+        if(file != null && message != "Processing..."){
 
             event.preventDefault();
+            message = "Processing...";
             image = await invoke("process", {
                 input: input_image,
                 size: quality,
                 sortType: sorting_type,
                 outputSize: image_size,
             });
+            message = "Process"
     
             const bytes = atob(image);
             const byteArray1 = [];
@@ -68,42 +71,8 @@
 
 <main class="container">
     <!--
-        <div class="row" style='height: 20%;'>
-            <div class="controlBar">
-                <button class="submitButton controlItem" onclick={submit}>Process</button>
-                
-                <div class="dropdown controlItem">
-                    <button class="hoverButton controlItem">{quality} x {quality}</button>
-                    <div class="content">
-                        <button onclick={() => changeQuality(1)} class="dropButton controlItem">1</button>
-                        <button onclick={() => changeQuality(2)} class="dropButton controlItem">2</button>
-                        <button onclick={() => changeQuality(4)} class="dropButton controlItem">4</button>
-                        <button onclick={() => changeQuality(8)} class="dropButton controlItem">8</button>
-                        <button onclick={() => changeQuality(16)} class="dropButton controlItem">16</button>
-                        <button onclick={() => changeQuality(32)} class="dropButton controlItem">32</button>
-                        <button onclick={() => changeQuality(64)} class="dropButton controlItem">64</button>
-                        <button onclick={() => changeQuality(128)} class="dropButton controlItem">128</button>
-                        <button onclick={() => changeQuality(256)} class="dropButton controlItem">256</button>
-                    </div>
-                </div>
-                
-                <input class="fileInput controlItem" type="file" onchange={handleFileChange} accept="image/*" />
-                
-                <div class="dropdown controlItem">
-                    <button class="hoverButton controlItem">{sorting_type}</button>
-                    <div class="content">
-                        <button onclick={() => changeSortMode("Vibrancy")} class="dropButton controlItem">Vibrancy</button>
-                        <button onclick={() => changeSortMode("Luminosity")} class="dropButton controlItem">Luminosity</button>
-                        <button onclick={() => changeSortMode("Colorfulness")} class="dropButton controlItem">Colorfulness</button>
-                        <button onclick={() => changeSortMode("Value")} class="dropButton controlItem">Value</button>
-                        <button onclick={() => changeSortMode("Red Content")} class="dropButton controlItem">Red Content</button>
-                        <button onclick={() => changeSortMode("Green Content")} class="dropButton controlItem">Green Content</button>
-                        <button onclick={() => changeSortMode("Blue Content")} class="dropButton controlItem">Blue Content</button>
-                        <button onclick={() => changeSortMode("Unsorted")} class="dropButton controlItem">Unsorted</button>
-                    </div>
-                </div>
         
-            </div>
+            
     
         </div>
         
@@ -112,8 +81,47 @@
         
         </div>
         -->
-    <div class="row" style='height: 80%;'>
-        <img class="image" src="src/routes/hue_sorted-2.png" alt="Sorter" />
+
+    <div class="row" style='height: 10vh;'>
+        <div class="controlBar">
+            <button class="submitButton controlItem" onclick={submit}>{message}</button>
+            
+            <div class="dropdown controlItem">
+                <button class="hoverButton controlItem">{quality} x {quality}</button>
+                <div class="content">
+                    <button onclick={() => changeQuality(1)} class="dropButton controlItem">1</button>
+                    <button onclick={() => changeQuality(2)} class="dropButton controlItem">2</button>
+                    <button onclick={() => changeQuality(4)} class="dropButton controlItem">4</button>
+                    <button onclick={() => changeQuality(8)} class="dropButton controlItem">8</button>
+                    <button onclick={() => changeQuality(16)} class="dropButton controlItem">16</button>
+                    <button onclick={() => changeQuality(32)} class="dropButton controlItem">32</button>
+                    <button onclick={() => changeQuality(64)} class="dropButton controlItem">64</button>
+                    <button onclick={() => changeQuality(128)} class="dropButton controlItem">128</button>
+                    <button onclick={() => changeQuality(256)} class="dropButton controlItem">256</button>
+                </div>
+            </div>
+            
+            <input class="fileInput controlItem" type="file" onchange={handleFileChange} accept="image/*" />
+            
+            <div class="dropdown controlItem">
+                <button class="hoverButton controlItem">{sorting_type}</button>
+                <div class="content">
+                    <button onclick={() => changeSortMode("Vibrancy")} class="dropButton controlItem">Vibrancy</button>
+                    <button onclick={() => changeSortMode("Luminosity")} class="dropButton controlItem">Luminosity</button>
+                    <button onclick={() => changeSortMode("Colorfulness")} class="dropButton controlItem">Colorfulness</button>
+                    <button onclick={() => changeSortMode("Value")} class="dropButton controlItem">Value</button>
+                    <button onclick={() => changeSortMode("Red Content")} class="dropButton controlItem">Red Content</button>
+                    <button onclick={() => changeSortMode("Green Content")} class="dropButton controlItem">Green Content</button>
+                    <button onclick={() => changeSortMode("Blue Content")} class="dropButton controlItem">Blue Content</button>
+                    <button onclick={() => changeSortMode("Unsorted")} class="dropButton controlItem">Unsorted</button>
+                </div>
+            </div>
+    
+        </div>
+    </div>
+
+    <div class="row" style='height: 90vh;'>
+        <img class="image" src={imageUrl} alt="Sorter" />
     </div>
 </main>
 
@@ -138,7 +146,25 @@
     background-color: var(--main-color);
     padding: 0%;
     margin: 0%;
+    overflow: hidden;
     
+}
+
+.image {
+   max-height: 100%;
+   max-width: 100%;
+
+   width: auto;
+   height: auto;
+}
+
+.imageContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
 }
 
 input,
@@ -218,23 +244,8 @@ button {
     width: 15%;
 }
 
-.image {
-   max-height: 100vh;
-   max-width: 100vw;
-   width: auto;
-   height: auto;
-}
-
-.imageContainer {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
-
 .container {
+    padding: 0;
     margin: 0;
     width: 100%;
     height: 100%;
@@ -252,6 +263,8 @@ button {
     display: block;
     justify-content: center;
     width: 100%;
+    margin: 0;
+    padding: 0;
 }
 
 .controlBar {
@@ -259,6 +272,7 @@ button {
     margin: 0;
     justify-content: space-between;
     width: 100%;
+    height: 100%;
 }
 
 a {
