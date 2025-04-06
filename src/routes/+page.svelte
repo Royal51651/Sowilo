@@ -67,43 +67,54 @@
 </script>
 
 <main class="container">
-    <div class="controlBar">
-        <button class="submitButton controlItem" onclick={submit}>Process</button>
+    <!--
+        <div class="row" style='height: 20%;'>
+            <div class="controlBar">
+                <button class="submitButton controlItem" onclick={submit}>Process</button>
+                
+                <div class="dropdown controlItem">
+                    <button class="hoverButton controlItem">{quality} x {quality}</button>
+                    <div class="content">
+                        <button onclick={() => changeQuality(1)} class="dropButton controlItem">1</button>
+                        <button onclick={() => changeQuality(2)} class="dropButton controlItem">2</button>
+                        <button onclick={() => changeQuality(4)} class="dropButton controlItem">4</button>
+                        <button onclick={() => changeQuality(8)} class="dropButton controlItem">8</button>
+                        <button onclick={() => changeQuality(16)} class="dropButton controlItem">16</button>
+                        <button onclick={() => changeQuality(32)} class="dropButton controlItem">32</button>
+                        <button onclick={() => changeQuality(64)} class="dropButton controlItem">64</button>
+                        <button onclick={() => changeQuality(128)} class="dropButton controlItem">128</button>
+                        <button onclick={() => changeQuality(256)} class="dropButton controlItem">256</button>
+                    </div>
+                </div>
+                
+                <input class="fileInput controlItem" type="file" onchange={handleFileChange} accept="image/*" />
+                
+                <div class="dropdown controlItem">
+                    <button class="hoverButton controlItem">{sorting_type}</button>
+                    <div class="content">
+                        <button onclick={() => changeSortMode("Vibrancy")} class="dropButton controlItem">Vibrancy</button>
+                        <button onclick={() => changeSortMode("Luminosity")} class="dropButton controlItem">Luminosity</button>
+                        <button onclick={() => changeSortMode("Colorfulness")} class="dropButton controlItem">Colorfulness</button>
+                        <button onclick={() => changeSortMode("Value")} class="dropButton controlItem">Value</button>
+                        <button onclick={() => changeSortMode("Red Content")} class="dropButton controlItem">Red Content</button>
+                        <button onclick={() => changeSortMode("Green Content")} class="dropButton controlItem">Green Content</button>
+                        <button onclick={() => changeSortMode("Blue Content")} class="dropButton controlItem">Blue Content</button>
+                        <button onclick={() => changeSortMode("Unsorted")} class="dropButton controlItem">Unsorted</button>
+                    </div>
+                </div>
         
-        <div class="dropdown controlItem">
-            <button class="hoverButton controlItem">{quality} x {quality}</button>
-            <div class="content">
-                <button onclick={() => changeQuality(1)} class="dropButton controlItem">1</button>
-                <button onclick={() => changeQuality(2)} class="dropButton controlItem">2</button>
-                <button onclick={() => changeQuality(4)} class="dropButton controlItem">4</button>
-                <button onclick={() => changeQuality(8)} class="dropButton controlItem">8</button>
-                <button onclick={() => changeQuality(16)} class="dropButton controlItem">16</button>
-                <button onclick={() => changeQuality(32)} class="dropButton controlItem">32</button>
-                <button onclick={() => changeQuality(64)} class="dropButton controlItem">64</button>
-                <button onclick={() => changeQuality(128)} class="dropButton controlItem">128</button>
-                <button onclick={() => changeQuality(256)} class="dropButton controlItem">256</button>
             </div>
+    
         </div>
         
-        <input class="fileInput controlItem" type="file" onchange={handleFileChange} accept="image/*" />
         
-        <div class="dropdown controlItem">
-            <button class="hoverButton controlItem">{sorting_type}</button>
-            <div class="content">
-                <button onclick={() => changeSortMode("Vibrancy")} class="dropButton controlItem">Vibrancy</button>
-                <button onclick={() => changeSortMode("Luminosity")} class="dropButton controlItem">Luminosity</button>
-                <button onclick={() => changeSortMode("Colorfulness")} class="dropButton controlItem">Colorfulness</button>
-                <button onclick={() => changeSortMode("Value")} class="dropButton controlItem">Value</button>
-                <button onclick={() => changeSortMode("Red Content")} class="dropButton controlItem">Red Content</button>
-                <button onclick={() => changeSortMode("Green Content")} class="dropButton controlItem">Green Content</button>
-                <button onclick={() => changeSortMode("Blue Content")} class="dropButton controlItem">Blue Content</button>
-                <button onclick={() => changeSortMode("Unsorted")} class="dropButton controlItem">Unsorted</button>
-            </div>
+        
+        
         </div>
-
+        -->
+    <div class="row" style='height: 80%;'>
+        <img class="image" src="src/routes/hue_sorted-2.png" alt="Sorter" />
     </div>
-    <img class="image" src={imageUrl} alt="Sorter" />
-
 </main>
 
 <style>
@@ -208,8 +219,19 @@ button {
 }
 
 .image {
+   max-height: 100vh;
+   max-width: 100vw;
+   width: auto;
+   height: auto;
+}
+
+.imageContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     width: 100%;
     height: 100%;
+    overflow: hidden;
 }
 
 .container {
@@ -218,7 +240,7 @@ button {
     height: 100%;
     max-width: 100%;
     max-height: 100%;
-    display: flex;
+    display: block;
     flex-direction: column;
     justify-content: center;
     text-align: center;
@@ -227,7 +249,7 @@ button {
 
 
 .row {
-    display: flex;
+    display: block;
     justify-content: center;
     width: 100%;
 }
