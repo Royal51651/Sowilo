@@ -61,11 +61,19 @@
             };
 
             reader.readAsDataURL(file);
+        } else {
+            imageUrl = "";
         }
     };
 
+    async function init() {
+        const path = "src/routes/sowilo_logo@2x.png";
+        const response = await fetch(path);
+        const blob = await response.blob();
+        imageUrl = URL.createObjectURL(blob);
+    }
 
-
+    init()
 
 </script>
 
@@ -86,6 +94,9 @@
         <div class="controlBar">
             <button class="submitButton controlItem" onclick={submit}>{message}</button>
             
+            <input class="controlItem" style="display: none" type="file" onchange={handleFileChange} accept="image/*" id="uploadButton"/>
+            <label class="fileInput controlItem" for='uploadButton'>Select File</label>
+            
             <div class="dropdown controlItem">
                 <button class="hoverButton controlItem">{quality} x {quality}</button>
                 <div class="content">
@@ -101,7 +112,6 @@
                 </div>
             </div>
             
-            <input class="fileInput controlItem" type="file" onchange={handleFileChange} accept="image/*" />
             
             <div class="dropdown controlItem">
                 <button class="hoverButton controlItem">{sorting_type}</button>
@@ -158,15 +168,6 @@
    height: auto;
 }
 
-.imageContainer {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
-
 input,
 button {
     border-radius: 8px;
@@ -174,12 +175,31 @@ button {
     padding: 0.3em 0.6em;
     font-weight: 500;
     font-family: inherit;
-    background-color: #ffffff;
+    background-color: var(--button-color);
 }
 
 .controlItem {
     width: 25%;
+    height: 100%;
     font-size: 1.2em;
+    box-shadow: 1px 2px, 5px black;
+}
+
+.fileInput {
+    border-radius: 8px;
+    border: 1px solid transparent;
+    padding: 0.3em 0.6em;
+    font-weight: 500;
+    font-family: inherit;
+    background-color: var(--button-color);
+    justify-content: center;
+    align-items: center;
+    display: flex;
+}
+
+.fileInput:hover {
+    border-color: rgb(0, 143, 129);
+    background-color: var(--dark-button-color);
 }
 
 .dropdown {
@@ -238,12 +258,6 @@ button {
     color: var(--text-color);
 }
 
-.fileInput {
-    background-color: var(--button-color);
-    color: var(--text-color);
-    width: 15%;
-}
-
 .container {
     padding: 0;
     margin: 0;
@@ -270,6 +284,7 @@ button {
 .controlBar {
     display: flex;
     margin: 0;
+    padding: 0%;
     justify-content: space-between;
     width: 100%;
     height: 100%;
@@ -297,6 +312,7 @@ button {
 
 button:hover {
     border-color: rgb(0, 143, 129);
+    background-color: var(--dark-button-color);
 }
 
 button:active {
