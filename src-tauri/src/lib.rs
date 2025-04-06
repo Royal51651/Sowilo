@@ -25,14 +25,27 @@ fn merge_sort(input: &Vec<Color>, sort_method: SortingFn) -> Vec<Color> {
     }
 }
 
+fn calculate_red(red: u8, green: u8, blue: u8) -> f32{
+    red as f32 - (blue as f32 / 2.0 + green as f32 / 2.0)
+}
+
+fn calculate_blue(red: u8, green: u8, blue: u8) -> f32{
+    blue as f32 - (green as f32 / 2.0 + red as f32 / 2.0)
+}
+
+fn calculate_green(red: u8, green: u8, blue: u8) -> f32{
+    green as f32 - (blue as f32 / 2.0 + red as f32 / 2.0)
+}
+
 fn calculate_vibrancy(red: u8, green: u8, blue: u8) -> f32{
-    let lum = calculate_colorfulness(red, green, blue);
-    let sat = calculate_colorfulness(red, green, blue);
-    if sat <= 128.0 || lum <= 64.0 {
-        lum
+    if green > red && green >= blue {
+        green as f32 - (blue as f32 / 2.0 + red as f32 / 2.0)
+    } else if blue >= red && blue >= green {
+        blue as f32 - (green as f32 / 2.0 + red as f32 / 2.0)
     } else {
-        lum * sat
+        red as f32 - (blue as f32 / 2.0 + green as f32 / 2.0)
     }
+    
 }
 
 fn calculate_colorfulness(red: u8, green: u8, blue: u8) -> f32 {
@@ -164,7 +177,7 @@ fn calculate_luminosity(red: u8, green: u8, blue: u8) -> f32 {
 }
 
 fn calculate_value(red: u8, green: u8, blue: u8) -> f32 {
-    if red > green && red > blue {
+    if red >= green && red >= blue {
         red as f32 / 255.0
     } else if green > red && green > blue {
         green as f32 / 255.0
@@ -198,7 +211,6 @@ fn generate_palette(img: DynamicImage, hues: u32, saturations: u32) -> Vec<Vec<i
     }
 
     // sort each pixel by it's hue
-    println!("Sorting Hues");
     for (_x, _y, pixel) in img.pixels() {
         let hue = calculate_hue(pixel[0], pixel[1], pixel[2]);
         let mut index: usize = (hue / hue_slice_size) as usize;
@@ -208,7 +220,6 @@ fn generate_palette(img: DynamicImage, hues: u32, saturations: u32) -> Vec<Vec<i
         hue_slices[index].push(pixel);
         
     }
-    println!("Sorting Saturations");
     let mut color_list: Vec<Vec<image::Rgba<u8>>> = Vec::new();
     for i in hue_slices {
         let mut min_sat: f32 = 360.0;
@@ -305,14 +316,22 @@ fn process(input: &str, size: u32, sort_type: &str, output_size: u32) -> String 
     let colors = generate_palette(img, size, size);
     let mut new_list: Vec<Vec<Color>> = Vec::new();
     for sub_list in &colors{
-        if sort_type == "colorfulness" {
+        if sort_type == "Colorfulness" {
             new_list.push(merge_sort(sub_list, calculate_colorfulness));
-        } else if sort_type == "luminosity" {
+        } else if sort_type == "Luminosity" {
             new_list.push(merge_sort(sub_list, calculate_luminosity));
-        } else if sort_type == "vibrancy" {
-            new_list.push(merge_sort(sub_list, calculate_vibrancy));
-        } else if sort_type == "value" {
+        } else if sort_type == "Value" {
             new_list.push(merge_sort(sub_list, calculate_value));
+        } else if sort_type == "Vibrancy" {
+            new_list.push(merge_sort(sub_list, calculate_vibrancy));
+        } else if sort_type == "Red Content" {
+            new_list.push(merge_sort(sub_list, calculate_red));
+        } else if sort_type == "Green Content" {
+            new_list.push(merge_sort(sub_list, calculate_green));
+        } else if sort_type == "Blue Content" {
+            new_list.push(merge_sort(sub_list, calculate_blue));
+        } else if sort_type == "Unsorted" {
+            new_list.push((sub_list).to_vec());
         }
         
     }
