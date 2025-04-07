@@ -94,9 +94,6 @@
         <div class="controlBar">
             <button class="submitButton controlItem" onclick={submit}>{message}</button>
             
-            <input class="controlItem" style="display: none" type="file" onchange={handleFileChange} accept="image/*" id="uploadButton"/>
-            <label class="fileInput controlItem" for='uploadButton'>Select File</label>
-            
             <div class="dropdown controlItem">
                 <button class="hoverButton controlItem">{quality} x {quality}</button>
                 <div class="content">
@@ -112,7 +109,6 @@
                 </div>
             </div>
             
-            
             <div class="dropdown controlItem">
                 <button class="hoverButton controlItem">{sorting_type}</button>
                 <div class="content">
@@ -126,6 +122,9 @@
                     <button onclick={() => changeSortMode("Unsorted")} class="dropButton controlItem">Unsorted</button>
                 </div>
             </div>
+            
+            <input class="controlItem" style="display: none" type="file" onchange={handleFileChange} accept="image/*" id="uploadButton"/>
+            <label class="fileInput controlItem" for='uploadButton'>Select File</label>
     
         </div>
     </div>
@@ -137,11 +136,21 @@
 
 <style>
 
+@font-face {
+    font-family: 'Odin Rounded';
+    src: url('src/routes/Odin Rounded - Bold.otf') format('opentype');
+    font-weight: nomral;
+    font-style: normal;
+    font-display: swap;
+}
+
 :root {
-    font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-    font-size: 16px;
+    font-family: Odin Rounded, Inter, Avenir, Helvetica, Arial, sans-serif;
+    font-size: 20px;
+    
     line-height: 24px;
-    font-weight: 400;
+    line-break: auto;
+    font-weight: 500;
     --button-color: rgb(0, 95, 86);
     --dark-button-color: rgb(0, 70, 64);
     --main-color: rgb(35, 31, 32);
@@ -173,7 +182,6 @@ button {
     border-radius: 8px;
     border: 1px solid transparent;
     padding: 0.3em 0.6em;
-    font-weight: 500;
     font-family: inherit;
     background-color: var(--button-color);
 }
@@ -181,15 +189,13 @@ button {
 .controlItem {
     width: 25%;
     height: 100%;
-    font-size: 1.2em;
-    box-shadow: 1px 2px, 5px black;
+    font-size: min(4vh, 4vw);
 }
 
 .fileInput {
     border-radius: 8px;
-    border: 1px solid transparent;
-    padding: 0.3em 0.6em;
-    font-weight: 500;
+    height: 100%;
+    max-height: 100%;
     font-family: inherit;
     background-color: var(--button-color);
     justify-content: center;
@@ -222,7 +228,7 @@ button {
     background-color: var(--dark-main-color);
     padding: 5%;
     border: 2px solid transparent;
-    border-radius: 8px;
+    border-radius: 16px;
     min-width: 100%;
     box-sizing: border-box;
 }
@@ -234,6 +240,7 @@ button {
     background-color: var(--button-color);
     margin-top: 2%;
     box-sizing: border-box;
+    font-size: min(3vh, 3vw);
 }
 
 .dropButton:hover {
@@ -288,20 +295,6 @@ button {
     justify-content: space-between;
     width: 100%;
     height: 100%;
-}
-
-a {
-    font-weight: 500;
-    color: #646cff;
-    text-decoration: inherit;
-}
-
-a:hover {
-    color: #535bf2;
-}
-
-h1 {
-    text-align: center;
 }
 
 input,
