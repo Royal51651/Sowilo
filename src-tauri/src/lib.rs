@@ -25,18 +25,6 @@ fn merge_sort(input: &Vec<Color>, sort_method: SortingFn) -> Vec<Color> {
     }
 }
 
-fn calculate_red(red: u8, green: u8, blue: u8) -> f32{
-    red as f32 - (blue as f32 / 2.0 + green as f32 / 2.0)
-}
-
-fn calculate_blue(red: u8, green: u8, blue: u8) -> f32{
-    blue as f32 - (green as f32 / 2.0 + red as f32 / 2.0)
-}
-
-fn calculate_green(red: u8, green: u8, blue: u8) -> f32{
-    green as f32 - (blue as f32 / 2.0 + red as f32 / 2.0)
-}
-
 fn calculate_vibrancy(red: u8, green: u8, blue: u8) -> f32{
     if green > red && green >= blue {
         green as f32 - (blue as f32 / 2.0 + red as f32 / 2.0)
@@ -324,12 +312,6 @@ fn process(input: &str, size: u32, sort_type: &str, output_size: u32) -> String 
             new_list.push(merge_sort(sub_list, calculate_value));
         } else if sort_type == "Vibrancy" {
             new_list.push(merge_sort(sub_list, calculate_vibrancy));
-        } else if sort_type == "Red Content" {
-            new_list.push(merge_sort(sub_list, calculate_red));
-        } else if sort_type == "Green Content" {
-            new_list.push(merge_sort(sub_list, calculate_green));
-        } else if sort_type == "Blue Content" {
-            new_list.push(merge_sort(sub_list, calculate_blue));
         } else if sort_type == "Unsorted" {
             new_list.push((sub_list).to_vec());
         }

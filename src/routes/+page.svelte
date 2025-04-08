@@ -116,9 +116,6 @@
                     <button onclick={() => changeSortMode("Luminosity")} class="dropButton controlItem">Luminosity</button>
                     <button onclick={() => changeSortMode("Colorfulness")} class="dropButton controlItem">Colorfulness</button>
                     <button onclick={() => changeSortMode("Value")} class="dropButton controlItem">Value</button>
-                    <button onclick={() => changeSortMode("Red Content")} class="dropButton controlItem">Red Content</button>
-                    <button onclick={() => changeSortMode("Green Content")} class="dropButton controlItem">Green Content</button>
-                    <button onclick={() => changeSortMode("Blue Content")} class="dropButton controlItem">Blue Content</button>
                     <button onclick={() => changeSortMode("Unsorted")} class="dropButton controlItem">Unsorted</button>
                 </div>
             </div>
