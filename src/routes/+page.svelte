@@ -186,6 +186,9 @@ button {
 .controlItem {
     width: 25%;
     height: 100%;
+    flex-shrink: 1;
+    justify-content: center;
+    align-items: center;
     font-size: min(4vh, 4vw);
 }
 
@@ -287,9 +290,9 @@ button {
 
 .controlBar {
     display: flex;
+    box-sizing: border-box;
+    padding: 1%;
     margin: 0;
-    padding: 0%;
-    justify-content: space-between;
     width: 100%;
     height: 100%;
 }
