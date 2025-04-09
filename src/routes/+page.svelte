@@ -67,7 +67,7 @@
     };
 
     async function init() {
-        const path = "src/routes/sowilo_logo@2x.png";
+        const path = "logo.png";
         const response = await fetch(path);
         const blob = await response.blob();
         imageUrl = URL.createObjectURL(blob);
@@ -254,11 +254,6 @@ button {
 
 .dropdown:hover .hoverButton {
     background-color: var(--dark-button-color);
-}
-
-.selectSlider {
-    background: var(--button-color);
-    color: var(--text-color);
 }
 
 .submitButton {
