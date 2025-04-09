@@ -184,6 +184,7 @@ button {
 }
 
 .controlItem {
+    display: flex;
     width: 25%;
     height: 100%;
     flex-shrink: 1;
@@ -291,7 +292,7 @@ button {
 .controlBar {
     display: flex;
     box-sizing: border-box;
-    padding: 1%;
+    padding: min(2vw, 2vh);
     margin: 0;
     width: 100%;
     height: 100%;
